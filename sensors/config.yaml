@@ -1,0 +1,60 @@
+# Sensor simulator configuration
+# All frequencies are in seconds. Change these to tune the demo without touching code.
+
+mqtt_broker: "localhost"
+mqtt_port: 1883
+
+# How often each device publishes a full round of readings (seconds)
+publish_interval_sec: 2
+
+# Number of virtual machines on the factory floor
+devices:
+  - device_id: "machine-01"
+  - device_id: "machine-02"
+  - device_id: "machine-03"
+
+# Probability (0-1) that any given reading is deliberately pushed out of
+# normal range to simulate a fault (used to demonstrate anomaly detection
+# end-to-end, from fog node through to the SNS alert).
+anomaly_probability: 0.03
+
+sensors:
+  temperature:
+    unit: "C"
+    baseline: 55.0        # normal operating temperature of a machine
+    amplitude: 6.0         # daily/cyclical swing (sine wave)
+    noise_std: 0.8
+    anomaly_offset: 35.0   # added on top when an anomaly is injected
+    normal_range: [30, 80]
+
+  vibration:
+    unit: "mm/s_rms"
+    baseline: 2.5
+    amplitude: 0.8
+    noise_std: 0.3
+    anomaly_offset: 8.0
+    normal_range: [0, 6]
+
+  humidity:
+    unit: "%RH"
+    baseline: 45.0
+    amplitude: 5.0
+    noise_std: 1.5
+    anomaly_offset: -30.0
+    normal_range: [20, 70]
+
+  energy_consumption:
+    unit: "kW"
+    baseline: 12.0
+    amplitude: 3.0
+    noise_std: 0.5
+    anomaly_offset: 10.0
+    normal_range: [2, 20]
+
+  machine_rpm:
+    unit: "rpm"
+    baseline: 1500.0
+    amplitude: 100.0
+    noise_std: 25.0
+    anomaly_offset: -900.0
+    normal_range: [800, 2000]

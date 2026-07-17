@@ -1,0 +1,41 @@
+# Fog node configuration
+# Local broker = same broker the sensor simulator publishes to (Lab 1/2 style).
+# AWS IoT Core = cloud endpoint the fog node forwards processed data to (Lab 2 style).
+
+local_broker: "localhost"
+local_port: 1883
+local_topic_filter: "factory/+/+/raw"
+
+# --- AWS IoT Core connection (fill in after completing Lab 2 setup) ---
+aws_iot_endpoint: "REPLACE_WITH_YOUR_IOT_ENDPOINT.iot.<region>.amazonaws.com"
+aws_iot_port: 8883
+aws_iot_client_id: "SmartFactory-fog-node-01"
+ca_cert_path: "certs/AmazonRootCA1.pem"
+cert_path: "certs/device-certificate.pem.crt"
+key_path: "certs/private.pem.key"
+aws_publish_topic_prefix: "factory"   # -> factory/<device_id>/agg
+
+# --- Fog processing parameters ---
+aggregation_window_sec: 5     # average raw readings received within this window
+batch_size: 6                 # number of aggregated points per outbound payload
+flush_interval_sec: 15        # force-flush a partial batch after this long
+
+# local retry buffer (used when AWS IoT Core is unreachable)
+retry_db_path: "fog_retry_buffer.db"
+retry_interval_sec: 20
+
+# Sanity bounds used for FILTERING (hard drop, sensor malfunction / noise)
+filter_bounds:
+  temperature: [-20, 150]
+  vibration: [0, 50]
+  humidity: [0, 100]
+  energy_consumption: [0, 100]
+  machine_rpm: [0, 5000]
+
+# Normal operating bounds used for ANOMALY DETECTION (flag but keep)
+normal_range:
+  temperature: [30, 80]
+  vibration: [0, 6]
+  humidity: [20, 70]
+  energy_consumption: [2, 20]
+  machine_rpm: [800, 2000]

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Factory Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
+  header { padding: 20px 28px; background: #111827; border-bottom: 1px solid #1f2937; }
+  header h1 { margin: 0; font-size: 20px; }
+  header p { margin: 4px 0 0; color: #94a3b8; font-size: 13px; }
+  #status { float: right; font-size: 12px; color: #94a3b8; }
+  main { padding: 24px 28px; }
+  .config-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
+  .config-bar input { background: #1f2937; border: 1px solid #374151; color: #e2e8f0; padding: 6px 10px; border-radius: 6px; width: 360px; }
+  .config-bar button { background: #2563eb; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat-card { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 14px 16px; }
+  .stat-card h3 { margin: 0 0 6px; font-size: 13px; color: #93c5fd; text-transform: capitalize; }
+  .stat-card .value { font-size: 22px; font-weight: 600; }
+  .stat-card .meta { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .anomaly-badge { color: #f87171; font-weight: 600; }
+  .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 18px; }
+  .chart-card { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 14px; }
+  .chart-card h3 { margin: 0 0 8px; font-size: 13px; color: #93c5fd; text-transform: capitalize; }
+</style>
+</head>
+<body>
+<header>
+  <span id="status">not connected</span>
+  <h1>Smart Factory — Fog &amp; Edge Computing Dashboard</h1>
+  <p>Live readings via API Gateway → Lambda → DynamoDB. Refreshes every 20s.</p>
+</header>
+<main>
+  <div class="config-bar">
+    <input id="apiBase" placeholder="https://xxxx.execute-api.<region>.amazonaws.com" />
+    <button onclick="saveApiBase()">Connect</button>
+  </div>
+
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="charts-grid" id="chartsGrid"></div>
+</main>
+
+<script>
+const SENSOR_TYPES = ["temperature", "vibration", "humidity", "energy_consumption", "machine_rpm"];
+let API_BASE = localStorage.getItem("smartfactory_api_base") || "";
+document.getElementById("apiBase").value = API_BASE;
+
+const charts = {};
+
+function saveApiBase() {
+  API_BASE = document.getElementById("apiBase").value.trim().replace(/\/$/, "");
+  localStorage.setItem("smartfactory_api_base", API_BASE);
+  refresh();
+}
+
+function initCharts() {
+  const grid = document.getElementById("chartsGrid");
+  grid.innerHTML = "";
+  SENSOR_TYPES.forEach(type => {
+    const card = document.createElement("div");
+    card.className = "chart-card";
+    card.innerHTML = `<h3>${type.replace("_", " ")}</h3><canvas id="chart-${type}" height="140"></canvas>`;
+    grid.appendChild(card);
+    const ctx = document.getElementById(`chart-${type}`).getContext("2d");
+    charts[type] = new Chart(ctx, {
+      type: "line",
+      data: { labels: [], datasets: [{ label: type, data: [], borderColor: "#60a5fa", tension: 0.3, pointRadius: 2 }] },
+      options: {
+        animation: false,
+        scales: {
+          x: { ticks: { color: "#94a3b8", maxTicksLimit: 6 }, grid: { color: "#1f2937" } },
+          y: { ticks: { color: "#94a3b8" }, grid: { color: "#1f2937" } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  });
+}
+
+async function refresh() {
+  if (!API_BASE) { document.getElementById("status").textContent = "enter API base URL above"; return; }
+  try {
+    const [statsRes, readingsRes] = await Promise.all([
+      fetch(`${API_BASE}/stats`).then(r => r.json()),
+      fetch(`${API_BASE}/readings?limit=15`).then(r => r.json()),
+    ]);
+    renderStats(statsRes);
+    renderCharts(readingsRes);
+    document.getElementById("status").textContent = `connected — last update ${new Date().toLocaleTimeString()}`;
+  } catch (e) {
+    document.getElementById("status").textContent = `error: ${e.message}`;
+  }
+}
+
+function renderStats(stats) {
+  const grid = document.getElementById("statsGrid");
+  grid.innerHTML = "";
+  SENSOR_TYPES.forEach(type => {
+    const s = stats[type] || {};
+    const card = document.createElement("div");
+    card.className = "stat-card";
+    card.innerHTML = `
+      <h3>${type.replace("_", " ")}</h3>
+      <div class="value">${s.avg ?? "—"}</div>
+      <div class="meta">min ${s.min ?? "—"} / max ${s.max ?? "—"} (n=${s.count ?? 0})</div>
+      <div class="meta ${s.anomaly_count ? "anomaly-badge" : ""}">${s.anomaly_count ?? 0} anomalies (last ${s.count ?? 0})</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderCharts(readings) {
+  SENSOR_TYPES.forEach(type => {
+    const items = (readings[type] || []).slice().reverse();
+    const chart = charts[type];
+    chart.data.labels = items.map(i => new Date(i.timestamp).toLocaleTimeString());
+    chart.data.datasets[0].data = items.map(i => i.value);
+    chart.data.datasets[0].pointBackgroundColor = items.map(i => i.anomaly ? "#f87171" : "#60a5fa");
+    chart.update();
+  });
+}
+
+initCharts();
+refresh();
+setInterval(refresh, 20000);
+</script>
+</body>
+</html>

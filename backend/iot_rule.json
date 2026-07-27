@@ -1,5 +1,4 @@
 {
-  "_comment": "AWS IoT Core Rules Engine definition. Create via: aws iot create-topic-rule --rule-name SmartFactoryIngestRule --topic-rule-payload file://iot_rule.json (see deploy/setup_aws.sh). LabRoleArn must have iot:*, lambda:InvokeFunction permissions (LabRole from AWS Academy already does).",
   "sql": "SELECT * FROM 'factory/+/agg'",
   "description": "Routes every fog-node batch to the ingest Lambda, which fans it out to DynamoDB (hot storage), Kinesis Firehose -> S3 (data lake) and SNS (real-time anomaly alerts).",
   "actions": [

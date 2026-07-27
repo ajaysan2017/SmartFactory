@@ -29,7 +29,7 @@
 <body>
 <header>
   <span id="status">not connected</span>
-  <h1>Smart Factory — Fog &amp; Edge Computing Dashboard</h1>
+  <h1>SmartFactory Dashboard</h1>
   <p>Live readings via API Gateway → Lambda → DynamoDB. Refreshes every 20s.</p>
 </header>
 <main>
@@ -88,7 +88,7 @@ async function refresh() {
     ]);
     renderStats(statsRes);
     renderCharts(readingsRes);
-    document.getElementById("status").textContent = `connected — last update ${new Date().toLocaleTimeString()}`;
+    document.getElementById("status").textContent = `Connected. Last update ${new Date().toLocaleTimeString()}`;
   } catch (e) {
     document.getElementById("status").textContent = `error: ${e.message}`;
   }

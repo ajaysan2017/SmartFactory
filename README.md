@@ -103,8 +103,7 @@ Gateway URL.
 The simulator injects out-of-range readings at a configurable rate (`anomaly_probability` in
 `sensors/config.yaml`, default 3%). Trace one through the whole pipeline: dashboard shows the
 point in red, the ingest Lambda's CloudWatch log shows the SNS publish, and you receive the
-alert email — this is a good live-demo moment for the "difficult part / how you solved it"
-question in the presentation.
+alert email.
 
 ## Troubleshooting
 

@@ -1,0 +1,43 @@
+name: SmartFactory CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: \"3.12\"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml flake8
+          pip install -r sensors/requirements.txt
+          pip install -r fog/requirements.txt
+
+      - name: Byte-compile all Python sources
+        run: |
+          python -m py_compile sensors/simulator.py
+          python -m py_compile fog/fog_node.py
+          python -m py_compile backend/lambda_ingest.py
+          python -m py_compile backend/lambda_api.py
+
+      - name: Lint (flake8, warnings only)
+        run: flake8 sensors fog backend --max-line-length=110 --exit-zero
+
+      - name: Validate YAML configs
+        run: |
+          python -c \"import yaml; yaml.safe_load(open('sensors/config.yaml'))\"
+          python -c \"import yaml; yaml.safe_load(open('fog/fog_config.yaml'))\"
+
+      - name: Validate JSON configs
+        run: |
+          python -c \"import json; json.load(open('backend/iot_rule.json'))\"

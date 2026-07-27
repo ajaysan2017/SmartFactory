@@ -41,7 +41,7 @@ docs/       report outline mapped to this architecture
 
 - AWS Academy Learner Lab session started, credentials active
 - Completed Lab 1 & 2 setup: EC2 instance with Mosquitto + paho-mqtt, IoT Thing
-  `SmartFactory-sensor-01` with certificates under `~/iot-lab1/certs/`, and your AWS IoT endpoint
+  `SmartFactory-fog-node-01` with certificates under `~/iot-lab1/certs/`, and your AWS IoT endpoint
 - AWS CLI configured on that EC2 instance (or Cloud9) with the rotated Learner Lab credentials
 
 ## Run order

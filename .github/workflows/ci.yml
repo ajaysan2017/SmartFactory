@@ -35,9 +35,9 @@ jobs:
 
       - name: Validate YAML configs
         run: |
-          python -c \"import yaml; yaml.safe_load(open('sensors/config.yaml'))\"
-          python -c \"import yaml; yaml.safe_load(open('fog/fog_config.yaml'))\"
+          python -c "import yaml; yaml.safe_load(open('sensors/config.yaml'))"
+          python -c "import yaml; yaml.safe_load(open('fog/fog_config.yaml'))"
 
       - name: Validate JSON configs
         run: |
-          python -c \"import json; json.load(open('backend/iot_rule.json'))\"
+          python -c "import json; json.load(open('backend/iot_rule.json'))"

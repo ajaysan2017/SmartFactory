@@ -83,9 +83,20 @@ messages, and any buffered batches from step 1 will flush automatically.
 
 ### 4. Open the dashboard
 
-Open `dashboard/index.html` in a browser (double-click, or `python -m http.server` in that
-folder). Paste the API Gateway base URL from step 2 into the "Connect" field. Charts and
-stat cards populate within ~20 seconds and refresh continuously.
+The dashboard is hosted live on S3 as a static website:
+
+http://smartfactory-datalake-712460979750.s3-website-us-east-1.amazonaws.com/dashboard/index.html
+
+Paste the API Gateway base URL from step 2 into the "Connect" field (only needed once, it
+is remembered on that browser via localStorage). Charts and stat cards populate within
+~20 seconds and refresh continuously.
+
+To host it yourself (e.g. after redeploying to a different AWS account), upload
+`dashboard/index.html` to an S3 bucket with static website hosting enabled and a public-read
+bucket policy scoped to that object, then browse to the buckets website endpoint. For local
+development only, you can instead open `dashboard/index.html` directly in a browser
+(double-click, or `python -m http.server` in that folder) and connect it to the same API
+Gateway URL.
 
 ## Demonstrating anomalies end-to-end
 
